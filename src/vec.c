@@ -6,13 +6,20 @@
 vec *vec_init(void)
 {
     vec *v = malloc(sizeof(vec));
+    
+    if (v == NULL)
+        return NULL;
+
+    v->data = malloc(sizeof(dir_info));
+    v->size = 0;
     return v;
 }
 
 int vec_push(vec *self, const dir_info *elem)
 {
-    if (self == NULL)
+    if (self == NULL || elem == NULL)
         return VEC_NULL_DATA;
+    
     self->data = realloc(self->data, sizeof(dir_info) * (self->size + 1));
 
     if (self->data == NULL)
@@ -66,6 +73,10 @@ int vec_free(vec *self)
         return VEC_NULL_DATA;
     if (self->data == NULL)
         return VEC_NULL_DATA;
+
+    for (usize i = 0; i < self->size; ++i)
+        if (self->data[i].path != NULL)
+            free(self->data[i].path);
 
     free(self->data);
     free(self);

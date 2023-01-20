@@ -22,7 +22,6 @@ static off_t dir_sum(char *path, vec *dirs, usize num_calls);
 static inline void abort_enomem(void);
 static inline bool len_over_one(const char *str);
 
-static bool error_occurred = false;
 
 int main(int argc, char **argv)
 {
@@ -42,13 +41,21 @@ int main(int argc, char **argv)
         abort_enomem();
 
     strcpy(directory, argv[1]);
-    strcat(directory, "/");
+    if (len_over_one(directory))
+        if (directory[0] != '/')
+            strcat(directory, "/");
 
     vec *dirs = vec_init();
+
+    if (dirs == NULL)
+        abort_enomem();
+
     dir_sum(directory, dirs, GET_BUF_SIZE_BYTES(len + 1));
 
     for (usize i = 0; i < dirs->size; ++i)
-        printf("%s: %ld\n", dirs->data[i].path, dirs->data[i].size);
+        if (dirs->data[i].path != NULL)
+            printf("%s: %ld\n", dirs->data[i].path, dirs->data[i].size);
+    
     vec_free(dirs);
     free(directory);
 
@@ -70,53 +77,37 @@ static off_t dir_sum(char *path,
     off_t size = 0;
     DIR *dptr = opendir(path);
 
-    /* couldn't open file so just return 0 */
-    if (dptr == NULL) {
-        if (path != NULL) {
-            free(path);
-            error_occurred = true;
-        }
+    /* couldn't open dir so just return 0 */
+    if (dptr == NULL)
         return 0;
-    }
 
     /* +2 for '/' and '\0' */
     const usize new_buf_size = (current_buf_size + DNAME_MAX_SIZE + 2) * sizeof(char);
+    char *dir_path = malloc(new_buf_size);
+    if (dir_path == NULL)
+        abort_enomem();
+    char *file_path = malloc(new_buf_size);
+
+    if (file_path == NULL)
+        abort_enomem();
 
     while ((sdir=readdir(dptr)) != NULL) {
         if (sdir->d_type == _DT_DIR) {
             if (len_over_one(sdir->d_name)) {
                 if (strcmp(sdir->d_name, ".") != 0 && strcmp(sdir->d_name, "..") != 0) {
-                    char *dir_path = malloc(new_buf_size);
-
-                    if (dir_path == NULL)
-                        abort_enomem();
-
                     strcpy(dir_path, path);
                     strcat(dir_path, sdir->d_name);
                     strcat(dir_path, "/");
                     stat(sdir->d_name, &buf);
                     size += dir_sum(dir_path, dirs, new_buf_size);
-
-                    /* dir_sum may have encountered an error so its important to check if any 
-                       error occurred to avoid double free */
-                    if (!error_occurred)
-                        free(dir_path);
-                    else
-                        error_occurred = false;
                 }
             }
         }
         else {
-            char *file_path = malloc(new_buf_size);
-
-            if (file_path == NULL)
-                abort_enomem();
-
             strcpy(file_path, path);
             strcat(file_path, sdir->d_name);
             stat(file_path, &buf);
             size += buf.st_size;
-            free(file_path);
         }
     }
 
@@ -125,12 +116,19 @@ static off_t dir_sum(char *path,
     if (info == NULL)
         abort_enomem();
 
-    info->path = path;
+    info->path = malloc(sizeof(char) * current_buf_size);
+    if (info->path == NULL)
+        abort_enomem();
+
+    strcpy(info->path, path);
     info->size = size;
-    vec_push(dirs, info);
+    if (vec_push(dirs, info) == ENOMEM)
+        abort_enomem();
 
     closedir(dptr);
     free(info);
+    free(dir_path);
+    free(file_path);
 
     return size;
 
