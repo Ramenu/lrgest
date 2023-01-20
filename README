@@ -1,0 +1,6 @@
+lrgest is a wrapper around 'du', 'sort', and 'sed'. By default, it lists the directories that take up the most disk space. 
+You can also toggle '-a' which will list files as well.
+
+lrgest also has support for custom ranges. By default, it will output the largest 10 directories/files. However, by giving
+a number (m) or a range from 'n-m' where n <= m, it will list the largest files/directories from that range. If no range
+is specified, then the default range is 1-m.
