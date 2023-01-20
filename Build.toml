@@ -1,9 +1,0 @@
-[package]
-    name = "lrgest"
-    debug_build = true
-    
-[compiler]
-    compiler = "gcc"
-
-[misc]
-    static_analysis_enabled = true
