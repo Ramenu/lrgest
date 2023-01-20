@@ -2,6 +2,7 @@
 #define LRGEST_VEC_H
 
 #include "dir_info.h"
+#include "types.h"
 
 #define VEC_SUCCESS 0
 #define VEC_FAILURE -1 /* Should be used only when it is a vague error and no other error code exists */
