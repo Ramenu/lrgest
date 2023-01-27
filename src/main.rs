@@ -122,7 +122,7 @@ fn main()
         _ => lines.len(),
     };
     if flag == USE_CUSTOM_RANGE {
-        head_tail.0 = head_tail.0 - 2;
+        head_tail.0 -= 2;
     }
 
     for i in 0..lines.len() {
@@ -175,7 +175,7 @@ fn get_size_with_unit(sizeb : usize) -> String
 /// Retrieves head and tail from a string. Will
 /// terminate the program if not correctly formatted.
 #[inline]
-fn retrieve_head_tail(s : &String) -> (usize, usize)
+fn retrieve_head_tail(s : &str) -> (usize, usize)
 {
     let mut head = String::new();
     let mut tail = String::new();
@@ -210,7 +210,7 @@ fn retrieve_head_tail(s : &String) -> (usize, usize)
         std::process::exit(1);
     }
 
-    return (head, tail);
+    (head, tail)
 }
 
 /// Prints error message to stderr.
@@ -247,6 +247,6 @@ fn parse_options(args : &mut Vec<String>) -> CmdOptions
         args.remove(i);
     }
 
-    return flag;
+    flag
 
 }
